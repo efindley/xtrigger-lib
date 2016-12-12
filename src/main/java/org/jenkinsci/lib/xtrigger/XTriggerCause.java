@@ -3,10 +3,11 @@ package org.jenkinsci.lib.xtrigger;
 import hudson.console.HyperlinkNote;
 import hudson.model.AbstractBuild;
 import hudson.model.Cause;
-import hudson.model.Hudson;
 import hudson.model.TaskListener;
 import hudson.remoting.Callable;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.jenkinsci.remoting.RoleChecker;
 
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,12 @@ public class XTriggerCause extends Cause {
         final XTriggerCauseAction causeAction = build.getAction(XTriggerCauseAction.class);
         if (causeAction != null) {
             try {
-                Hudson.getInstance().getRootPath().act(new Callable<Void, XTriggerException>() {
+                Jenkins.getInstance().getRootPath().act(new Callable<Void, XTriggerException>() {
+                    @Override
+                    public void checkRoles(RoleChecker roleChecker) throws SecurityException {
+
+                    }
+
                     @Override
                     public Void call() throws XTriggerException {
                         causeAction.setBuild(build);

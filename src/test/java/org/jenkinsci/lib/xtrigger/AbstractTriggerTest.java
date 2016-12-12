@@ -23,12 +23,14 @@
  */
 package org.jenkinsci.lib.xtrigger;
 
-import static org.junit.Assert.assertTrue;
 import hudson.model.FreeStyleProject;
-
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import static org.junit.Assert.assertTrue;
 
 public class AbstractTriggerTest {
     @Rule public JenkinsRule j = new JenkinsRule();
@@ -47,6 +49,27 @@ public class AbstractTriggerTest {
 
         Thread.sleep(60000);
 
-        assertTrue(p.getBuilds().size() > 0);
+        assertTrue(!p.getBuilds().isEmpty());
+    }
+
+    @Test
+    public void testWorkflowJobSuccess() throws Exception {
+        j.jenkins.setNumExecutors(1);
+        j.createOnlineSlave();
+        WorkflowJob p = j.jenkins.createProject(WorkflowJob.class, "p");
+        p.setDefinition(new CpsFlowDefinition(
+                "node { echo 'hello world' }"));
+
+        TestTrigger trigger = new TestTrigger();
+        p.addTrigger(trigger);
+        trigger.trigger();
+        trigger.start(p, true);
+        trigger.run();
+
+        Thread.sleep(30000);
+
+        assertTrue(!p.getBuilds().isEmpty());
+        j.assertLogContains("hello world", p.getFirstBuild());
+
     }
 }
