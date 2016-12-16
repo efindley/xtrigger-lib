@@ -93,20 +93,23 @@ public abstract class AbstractTrigger extends Trigger<BuildableItem> implements 
         super.start(project, newInstance);
 
         XTriggerLog log = new XTriggerLog(new StreamTaskListener(new NullStream()));
-        Node pollingNode = getPollingNode(log);
-        if (pollingNode == null) {
-            log.info("Can't find any complete active node.");
-            log.info("Checking again in next polling schedule.");
-            log.info("Waiting for next schedule.");
-            offlineSlaveOnStartup = true;
-            return;
-        }
+        Node pollingNode = null;
+        if(requirePollingNode()) {
+            pollingNode = getPollingNode(log);
+            if (pollingNode == null) {
+                log.info("Can't find any complete active node.");
+                log.info("Checking again in next polling schedule.");
+                log.info("Waiting for next schedule.");
+                offlineSlaveOnStartup = true;
+                return;
+            }
 
-        if (pollingNode.getRootPath() == null) {
-            log.info("The running slave might be offline at the moment.");
-            log.info("Waiting for next schedule.");
-            offlineSlaveOnStartup = true;
-            return;
+            if (pollingNode.getRootPath() == null) {
+                log.info("The running slave might be offline at the moment.");
+                log.info("Waiting for next schedule.");
+                offlineSlaveOnStartup = true;
+                return;
+            }
         }
 
         try {
